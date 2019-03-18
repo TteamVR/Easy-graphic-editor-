@@ -1,0 +1,33 @@
+# Project: WinLego
+# Makefile created by Dev-C++ 5.2.0.1
+
+CPP      = g++.exe
+CC       = gcc.exe
+WINDRES  = windres.exe
+RES      = WinLego_private.res
+OBJ      = main.o $(RES)
+LINKOBJ  = main.o $(RES)
+LIBS     = -L"D:/Install/Dev-Cpp/MinGW32/lib" -static-libstdc++ -static-libgcc -mwindows C:/dllBridge/Lego/WinMain.o C:/dllBridge/Lego/Demo/ScrSaver_1.o C:/dllBridge/Lego/Colobok/Colobok.o C:/dllBridge/Lego/Demo/demo_1.o C:/dllBridge/Lego/Demo/UsefulFoo.o  C:/dllBridge/Lego/Control/Buttons.o C:/dllBridge/Lego/Control/Manag_ID.o C:/dllBridge/Lego/mySTL/q_1.o C:/dllBridge/Lego/mySTL/Queue.o C:/dllBridge/Lego/mySTL/FORQ_2.o C:/dllBridge/Lego/Control/Column.o C:/dllBridge/Lego/DataBase/DB.o   C:/dllBridge/Lego/NewPrint.o  C:/dllBridge/Lego/Print.o C:/dllBridge/Lego/Control/EditBox.o C:/dllBridge/Lego/MyOpenGL/MyGL.o -lopengl32 -lglu32  C:/dllBridge/Lego/stdLib/COMCTL32.LIB C:/dllBridge/Lego/stdLib/libwininet.a C:/dllBridge/Lego/stdLib/libwinmm.a C:/dllBridge/Lego/stdLib//libgdiplus.a     -s 
+INCS     = -I"D:/Install/Dev-Cpp/MinGW32/include" 
+CXXINCS  = -I"D:/Install/Dev-Cpp/MinGW32/include" 
+BIN      = WinLego.exe
+CXXFLAGS = $(CXXINCS)   -masm=intel
+CFLAGS   = $(INCS)   -masm=intel
+RM       = rm -f
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before WinLego.exe all-after
+
+
+clean: clean-custom
+	${RM} $(OBJ) $(BIN)
+
+$(BIN): $(OBJ)
+	$(CPP) $(LINKOBJ) -o "WinLego.exe" $(LIBS)
+
+main.o: main.cpp
+	$(CPP) -c main.cpp -o main.o $(CXXFLAGS)
+
+WinLego_private.res: WinLego_private.rc resource/Menu.rc 
+	$(WINDRES) -i WinLego_private.rc --input-format=rc -o WinLego_private.res -O coff 
