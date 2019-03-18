@@ -5,6 +5,7 @@ using namespace Lego;
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <time.h>
 using namespace std;
 
 #define FieldX 24
@@ -13,23 +14,33 @@ using namespace std;
 HPEN pen;
 HBRUSH brush;
 
-const int Red    = RGB(255, 51, 51);
-const int Blue   = RGB(0, 102, 204);
-const int Orange = RGB(255, 128, 0);
-const int Green  = RGB(0, 204, 0);
-const int Gray   = RGB(96, 96, 96);
-const int Violet = RGB(153, 51, 255);
-const int Pink   = RGB(255, 0, 127);
-const int Black  = RGB(0, 0, 0);
+const int Red    = RGB(255,  51,  51);
+const int Blue   = RGB(  0, 102, 204);
+const int Orange = RGB(255, 128,   0);
+const int Green  = RGB(  0, 204,   0);
+const int Gray   = RGB( 96,  96,  96);
+const int Violet = RGB(153,  51, 255);
+const int Pink   = RGB(255,   0, 127);
+const int Yellow = RGB(255, 255,  51);
+const int Black  = RGB(  0,   0,   0);
+const int White  = RGB(255, 255, 255);
+
+int CNfB[10] = {Black, White, Red, Pink,
+				Orange, Yellow,   Green,
+				Blue, Violet,     Gray};
 
 const int FieldColor = RGB(62, 58, 63);
 
 int Type = 1;
 
-int ColorAuto = Violet;			
+int ColorAuto = White;			
 int CellCountX;
 int CellCountY;
 
+int PenSize = 1;
+
+int Forms = 1;
+int OldForms = 1;
 int SizeCells = 6;
 int Color;
 
@@ -37,30 +48,48 @@ bool TurnDrawing;
 bool Cells[67][67];
 
 Button ColorBtn[10];
+Button RandomColor;
 
-void ColorButton()
+void CreateColorButton()
 {	
-	char NameImg[100];	
-	char CharI;
-		
-	Print(0, 430, "Color:");
-	
+	char NameImg[50];
+
+	RandomColor.Create("Random", 25, 431, 50, 30);
+
 	for(int i = 0; i < 10; i++)
-	{	
-		sprintf(NameImg, "%s %s %s", "ColorForButton\\", CharI, ".bmp");
-		ColorBtn[i].CreateWithPic(NameImg, 80 + (i * 35), 430, 30, 30);	
+	{		
+		sprintf(NameImg, "%s%d%s", "ColorForButton\\", i, ".bmp");
+		ColorBtn[i].CreateWithPic(NameImg, 80 + (i * 35), 431, 30, 30);	
 	}
 }
 
-void Square(int x, int y, int Color)
+struct MemoryofCells
+{
+	int x;
+	int y;	
+} MfCArray[67][67]; 
+
+void Control()
+{	
+	if(Key_Pressed == 117)
+	{
+		Forms++;
+		Key_Pressed = 0;
+	}
+}
+
+void Square(int x, int y, int Color, int sizeX, int sizeY)
 {	
 	hdc = GetDC(hWnd);
 
 	brush = CreateSolidBrush(Color);	
 	SelectObject(hdc, brush);	
 	
-	Rectangle(hdc, x, y, x + SizeCells, y + SizeCells);	
-	
+	if(sizeX == 0 && sizeY == 0)
+		Rectangle(hdc, x, y, x + SizeCells, y + SizeCells);	
+	else
+		Rectangle(hdc, x, y, x + sizeX, y + sizeY);
+		
 	ReleaseDC(hWnd,hdc);
 }
 	
@@ -73,59 +102,66 @@ void Reset()
 
 void CheckCells()
 {
+	for(int a = 0; a < 67; a++)	
+		for(int b = 0; b <  67; b++)
+		{
+			if(Cells[a][b] > 0)
+				Square(MfCArray[a][b].x, MfCArray[a][b].x, ColorAuto, 0, 0);	
+			if(Cells[a][b] < 1)
+				Square(MfCArray[a][b].x, MfCArray[a][b].x, Black, 0, 0);
+		}	
+}
 
+void PushProcessing()
+{	
+	srand(time(0));
+	
+	//..........Color..........//
+	 
+	if(RandomColor.Press())
+		ColorAuto = CNfB[rand()%10];
+	
+	for(int i = 0; i < 10; i++)
+		if(ColorBtn[i].Press())
+			ColorAuto = CNfB[i];
+
+	//..........Color..........//
+	
 }
 
 void DrawingBox(int x, int y)
 {
+	PushProcessing();
+	Control();
+	
 	////////////////// Drawing of field //////////////////
+ 
+	if(Forms % 2 != 0 && Forms != OldForms)
+	{
+
+		hdc = GetDC(hWnd);
+					
+		pen = CreatePen(PS_SOLID , 1 , FieldColor);	
+		SelectObject (hdc, pen);								
 	
-	if(ColorBtn[0].Press())
-		ColorAuto = Black;
-
-	if(ColorBtn[1].Press())
-		ColorAuto = Gray;
-
-	if(ColorBtn[2].Press())
-		ColorAuto = Red;
-
-	if(ColorBtn[3].Press())
-		ColorAuto = Blue;
-
-	if(ColorBtn[4].Press())
-		ColorAuto = Orange;
-
-	if(ColorBtn[5].Press())
-		ColorAuto = Green;
-
-	if(ColorBtn[6].Press())
-		ColorAuto = Violet;
-
-	if(ColorBtn[7].Press())
-		ColorAuto = Black;
-
-	if(ColorBtn[8].Press())
-		ColorAuto = Black;
-
-	if(ColorBtn[9].Press())
-		ColorAuto = Black;
-	
-	hdc = GetDC(hWnd);
+		for(int i = 0; i < 67 + 1; i++)
+		{	
+			MoveToEx(hdc, x, y + (i * SizeCells), NULL);  // horizontal	
+			LineTo(hdc, x + 403, y + (i * SizeCells));
 			
-	pen = CreatePen(PS_SOLID , 1 , FieldColor);	
-	SelectObject (hdc, pen);								
-	
-	for(int i = 0; i < 67 + 1; i++)
-	{	
-		MoveToEx(hdc, x, y + (i * SizeCells), NULL);  // horizontal	
-		LineTo(hdc, x + 403, y + (i * SizeCells));
+			MoveToEx(hdc, x  + (i * SizeCells), y, NULL); // vertical 
+			LineTo(hdc, x + (i * SizeCells), y + 403);
+		}
 		
-		MoveToEx(hdc, x  + (i * SizeCells), y, NULL); // vertical 
-		LineTo(hdc, x + (i * SizeCells), y + 403);
+		ReleaseDC(hWnd,hdc);
+		OldForms = Forms;
 	}
-	
-	ReleaseDC(hWnd,hdc);
-	
+
+	if(Forms % 2 == 0 && Forms != OldForms)
+	{
+		Square(FieldX, FieldY, Black, 450, 450);
+		OldForms = Forms;
+	}
 	////////////////// Drawing of field //////////////////
 	
 	
@@ -136,20 +172,27 @@ void DrawingBox(int x, int y)
 	
 	for(int a = 0; a < 67; a++)
 	{	
-		for(int b = 0; b <  67; b++)
+		for(int b = 0; b < 67; b++)
 		{	
 			for(int x = Fx; x < (Fx + SizeCells); x++)
 				for(int y = Fy; y < (Fy + SizeCells); y++)
 				{	
-					if(Type == 1)
+								
+					if(Timer_CLK == 10)
 					{
+						MfCArray[a][b].x = Fx;
+						MfCArray[a][b].y = Fy;
+					}
+					
+					if(Type == 1)
+					{	
 						//...........Simple.point...........// 
 						
 						if(LMouseBtn)				
 							if(xMFix == x && yMFix == y)  
-							{	
+							{
 								Cells[a][b] += Color;	
-								Square(Fx, Fy, ColorAuto);
+								Square(Fx, Fy, ColorAuto, 0, 0);
 								LMouseBtn = 0;
 							}	
 							
@@ -165,11 +208,11 @@ void DrawingBox(int x, int y)
 							TurnDrawing = false;
 							
 						if(xMove == x && yMove == y)         
-						{	
+						{
 							if(TurnDrawing)
 							{
 								Cells[a][b]++;	
-								Square(Fx, Fy, ColorAuto);
+								Square(Fx, Fy, ColorAuto, 0, 0);
 							}
 							
 							if(LMouseBtnUp)
@@ -200,7 +243,7 @@ void DrawingUpdate()
 
 void INIT()
 {	
-	ColorButton();
+	CreateColorButton();
 	SetTimer(hWnd, 3,  1, (TIMERPROC) DrawingUpdate);
 }
 
@@ -266,116 +309,6 @@ void ScanButtonsAndMenuItems(int item)            //
  
 }
 
-/*
-#include       "C:\dllBridge\Lego\WinMain.h"  
-using namespace Lego;
-
-#include <cmath>
-#include <algorithm>
-#include <vector>
-using namespace std;
-
-#define FieldX 25
-#define FieldY 25
-
-HPEN pen;
-HBRUSH brush;
-
-int ColorTurn;
-const int Red   = RGB(255, 51, 51);
-const int Blue  = RGB(0, 102, 204);
-int ColorAuto;
-
-bool Cells[10][10];
-
-void Turn()
-{
-	if(ColorTurn % 2 == 0)
-		ColorAuto = Red;
-	else
-		ColorAuto = Blue;
-}
-
-void Square(int x, int y, int Color)
-{	
-	hdc = GetDC(hWnd);
-
-	brush = CreateSolidBrush(Color);	
-	SelectObject(hdc, brush);	
-	
-	Rectangle(hdc, x, y, x + 40, y + 40);	
-	
-	ReleaseDC(hWnd,hdc);
-}
-
-void DrawingBox(int x, int y)
-{	
-	Turn();
-	
-	////////////////// Drawing of field //////////////////
-
-	hdc = GetDC(hWnd);
-			
-	pen = CreatePen(PS_SOLID , 1 , RGB(128, 128, 128));	
-	SelectObject (hdc, pen);								
-	
-	for(int i = 0; i < 11; i++)
-	{		
-
-		MoveToEx(hdc, x, y + (i * 40), NULL);  // horizontal	
-		LineTo(hdc, x + 400, y + (i * 40));
-		
-		MoveToEx(hdc, x  + (i * 40), y, NULL); // vertical 
-		LineTo(hdc, x + (i * 40), y + 400);
-	}
-	
-	ReleaseDC(hWnd,hdc);
-	
-	////////////////// Drawing of field //////////////////
-	
-	
-	////////////////// Cell survey //////////////////
-	
-	int Fx = FieldX, 
-		Fy = FieldY;
-	
-	for(int a = 0; a < 10; a++)
-	{	
-		for(int b = 0; b < 10; b++)
-		{	
-			for(int x = Fx; x < (Fx + 40); x++)
-				for(int y = Fy; y < (Fy + 40); y++)
-					if(xMFix == x && yMFix == y)
-					{	
-						if(LMouseBtn)
-						{	
-							Cells[a][b]++;
-							Square(Fx, Fy, ColorAuto);
-							LMouseBtn = 0;
-						}
-						
-					}
-			Fx += 40;
-		}	
-		Fy += 40;
-		Fx = FieldX;
-	}
-	////////////////// Cell survey //////////////////
-		
-}	
-
-void INIT()
-{	
-	DrawingBox(FieldX, FieldY);
-}
-
-void START()
-{ 	
-	if(LMouseBtn)
-		DrawingBox(FieldX, FieldY);
-}	
-
-*/
 
 
 
