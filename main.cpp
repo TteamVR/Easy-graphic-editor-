@@ -11,6 +11,15 @@ using namespace std;
 #define FieldX 24
 #define FieldY 24
 
+/*#define
+#define
+#define
+#define*/
+#define Pencil 6
+#define Eraser 7
+#define Sheet  8
+#define Grid   9
+
 HPEN pen;
 HBRUSH brush;
 
@@ -39,7 +48,7 @@ int CellCountY;
 
 int PenSize = 1;
 
-int Forms = 1;
+int Forms = 0;
 int OldForms = 1;
 int SizeCells = 6;
 int Color;
@@ -75,14 +84,6 @@ void CreateControlButtons()
 	}	
 }
 
-/*
-struct MemoryofCells
-{
-	int x;
-	int y;	
-} MfCArray[67][67]; 
-
-*/
 void Square(int x, int y, int Color, int sizeX, int sizeY)
 {	
 	hdc = GetDC(hWnd);
@@ -127,19 +128,27 @@ void DrawingMesh(int x, int y)
 	OldForms = Forms;	
 }
 
-/*
-void CheckCells()
-{
-	for(int a = 0; a < 67; a++)	
-		for(int b = 0; b <  67; b++)
-		{
-			if(Cells[a][b] > 0)
-				Square(MfCArray[a][b].x, MfCArray[a][b].x, ColorAuto, 0, 0);	
-			if(Cells[a][b] < 1)
-				Square(MfCArray[a][b].x, MfCArray[a][b].x, Black, 0, 0);
-		}	
+void Boundaries(int x, int y)
+{	
+	x = x - 2;
+	y = y - 2;
+	
+	hdc = GetDC(hWnd);
+					
+	pen = CreatePen(PS_SOLID , 1 , FieldColor);	
+	SelectObject (hdc, pen);	
+	
+	for(int i = 0; i < 2; i++)
+	{	
+		MoveToEx(hdc, x + (i * 406), y, NULL);  // horizontal	
+		LineTo(hdc, x + (i * 406), y + 407);
+			
+		MoveToEx(hdc, x , y + (i * 406), NULL);  // vertical 	
+		LineTo(hdc, x + 407, y + (i * 406));
+	}
+		
+	ReleaseDC(hWnd,hdc);
 }
-*/
 
 void Control()
 {	
@@ -158,10 +167,10 @@ void Control()
 		Key_Pressed = 0;
 	}	
 	
-	if(ControlBtn[0].Press()) // Pen
+	if(ControlBtn[Pencil].Press()) // Pencil
 		Type = 1;
-	
-	if(ControlBtn[7].Press()) // Eraser
+		
+	if(ControlBtn[Eraser].Press()) // Eraser
 		Type = 2;
 }
 
@@ -181,24 +190,31 @@ void PushProcessing()
 	//..........Color..........//
 	
 }
+void UpdateField(int x, int y)
+{	
+	////////////////// Drawing of field //////////////////
+ 
+	if(Forms % 2 != 0)
+	{
+		Boundaries(FieldX, FieldY);	
+		DrawingMesh(x, y);
+	}
+	if(Forms % 2 == 0 && Forms != OldForms)
+	{	
+		Square(FieldX, FieldY, Black, 450, 450);
+		Boundaries(FieldX, FieldY);	
+		OldForms = Forms;
+	}
+	////////////////// Drawing of field //////////////////
+}
+
 
 void DrawingBox(int x, int y)
 {
 	PushProcessing();
 	Control();
 	
-	////////////////// Drawing of field //////////////////
- 
-	if(Forms % 2 != 0 && Forms != OldForms)
-		DrawingMesh(x, y);
-	
-	if(Forms % 2 == 0 && Forms != OldForms)
-	{
-		Square(FieldX, FieldY, Black, 450, 450);
-		OldForms = Forms;
-	}
-	////////////////// Drawing of field //////////////////
-	
+	UpdateField(x, y);
 	
 	////////////////// Cell survey //////////////////
 	
@@ -212,13 +228,7 @@ void DrawingBox(int x, int y)
 			for(int x = Fx; x < (Fx + SizeCells); x++)
 				for(int y = Fy; y < (Fy + SizeCells); y++)
 				{	
-					/*			
-					if(Timer_CLK == 10)
-					{
-						MfCArray[a][b].x = Fx;
-						MfCArray[a][b].y = Fy;
-					}
-					*/
+					
 					if(Type == 1 || Type == 2)
 					{	
 						//...........Simple.point...........// 
