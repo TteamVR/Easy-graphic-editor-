@@ -48,6 +48,7 @@ bool TurnDrawing;
 bool Cells[67][67];
 
 Button ColorBtn[10];
+Button ControlBtn[10];
 Button RandomColor;
 
 void CreateColorButton()
@@ -63,21 +64,25 @@ void CreateColorButton()
 	}
 }
 
+void CreateControlButtons()
+{
+	char NameImg[50];
+	
+	for(int i = 0; i < 10; i++)
+	{		
+		sprintf(NameImg, "%s%d%s", "IconforButton\\", i, ".bmp");
+		ControlBtn[i].CreateWithPic(NameImg, 435, 25 + (i * 44), 40, 40);	
+	}	
+}
+
+/*
 struct MemoryofCells
 {
 	int x;
 	int y;	
 } MfCArray[67][67]; 
 
-void Control()
-{	
-	if(Key_Pressed == 117)
-	{
-		Forms++;
-		Key_Pressed = 0;
-	}
-}
-
+*/
 void Square(int x, int y, int Color, int sizeX, int sizeY)
 {	
 	hdc = GetDC(hWnd);
@@ -97,9 +102,32 @@ void Reset()
 {	
 	for(int a = 0; a < 20; a++)
 		for(int b = 0; b < 20; b++)	
-			Cells[a][b] = 0;			
+			Cells[a][b] = 0;
+			
+	Square(FieldX, FieldY, Black, 450, 450);			
 }
 
+void DrawingMesh(int x, int y)
+{
+	hdc = GetDC(hWnd);
+					
+	pen = CreatePen(PS_SOLID , 1 , FieldColor);	
+	SelectObject (hdc, pen);								
+
+	for(int i = 0; i < 67 + 1; i++)
+	{	
+		MoveToEx(hdc, x, y + (i * SizeCells), NULL);  // horizontal	
+		LineTo(hdc, x + 403, y + (i * SizeCells));
+		
+		MoveToEx(hdc, x  + (i * SizeCells), y, NULL); // vertical 
+		LineTo(hdc, x + (i * SizeCells), y + 403);
+	}
+	
+	ReleaseDC(hWnd,hdc);
+	OldForms = Forms;	
+}
+
+/*
 void CheckCells()
 {
 	for(int a = 0; a < 67; a++)	
@@ -110,6 +138,31 @@ void CheckCells()
 			if(Cells[a][b] < 1)
 				Square(MfCArray[a][b].x, MfCArray[a][b].x, Black, 0, 0);
 		}	
+}
+*/
+
+void Control()
+{	
+	if(Key_Pressed == 117 || ControlBtn[9].Press()) // Forms
+	{
+		Forms++;
+		Key_Pressed = 0;
+	}
+	
+	if(Key_Pressed == 116 || ControlBtn[8].Press()) // ResetPicture
+	{
+		Reset();
+		
+		if(Forms % 2 != 0)
+			DrawingMesh(FieldX, FieldY);
+		Key_Pressed = 0;
+	}	
+	
+	if(ControlBtn[0].Press()) // Pen
+		Type = 1;
+	
+	if(ControlBtn[7].Press()) // Eraser
+		Type = 2;
 }
 
 void PushProcessing()
@@ -137,26 +190,8 @@ void DrawingBox(int x, int y)
 	////////////////// Drawing of field //////////////////
  
 	if(Forms % 2 != 0 && Forms != OldForms)
-	{
-
-		hdc = GetDC(hWnd);
-					
-		pen = CreatePen(PS_SOLID , 1 , FieldColor);	
-		SelectObject (hdc, pen);								
+		DrawingMesh(x, y);
 	
-		for(int i = 0; i < 67 + 1; i++)
-		{	
-			MoveToEx(hdc, x, y + (i * SizeCells), NULL);  // horizontal	
-			LineTo(hdc, x + 403, y + (i * SizeCells));
-			
-			MoveToEx(hdc, x  + (i * SizeCells), y, NULL); // vertical 
-			LineTo(hdc, x + (i * SizeCells), y + 403);
-		}
-		
-		ReleaseDC(hWnd,hdc);
-		OldForms = Forms;
-	}
-
 	if(Forms % 2 == 0 && Forms != OldForms)
 	{
 		Square(FieldX, FieldY, Black, 450, 450);
@@ -177,22 +212,31 @@ void DrawingBox(int x, int y)
 			for(int x = Fx; x < (Fx + SizeCells); x++)
 				for(int y = Fy; y < (Fy + SizeCells); y++)
 				{	
-								
+					/*			
 					if(Timer_CLK == 10)
 					{
 						MfCArray[a][b].x = Fx;
 						MfCArray[a][b].y = Fy;
 					}
-					
-					if(Type == 1)
+					*/
+					if(Type == 1 || Type == 2)
 					{	
 						//...........Simple.point...........// 
 						
 						if(LMouseBtn)				
 							if(xMFix == x && yMFix == y)  
 							{
-								Cells[a][b] += Color;	
-								Square(Fx, Fy, ColorAuto, 0, 0);
+								if(Type == 1)
+								{
+									Cells[a][b] += Color;
+									Square(Fx, Fy, ColorAuto, 0, 0);
+								}
+								
+								if(Type == 2)
+								{
+									Cells[a][b] = 0;	
+									Square(Fx, Fy, Black, 0, 0);
+								}
 								LMouseBtn = 0;
 							}	
 							
@@ -210,9 +254,18 @@ void DrawingBox(int x, int y)
 						if(xMove == x && yMove == y)         
 						{
 							if(TurnDrawing)
-							{
-								Cells[a][b]++;	
-								Square(Fx, Fy, ColorAuto, 0, 0);
+							{	
+								if(Type == 1)
+								{
+									Cells[a][b] += Color;	
+									Square(Fx, Fy, ColorAuto, 0, 0);
+								}
+								
+								if(Type == 2)
+								{
+									Cells[a][b] = 0;
+									Square(Fx, Fy, Black, 0, 0);
+								}
 							}
 							
 							if(LMouseBtnUp)
@@ -225,6 +278,7 @@ void DrawingBox(int x, int y)
 							
 						//...........Oblong.point...........// 
 					}
+					
 				}
 				
 			Fx += SizeCells;
@@ -243,6 +297,7 @@ void DrawingUpdate()
 
 void INIT()
 {	
+	CreateControlButtons();
 	CreateColorButton();
 	SetTimer(hWnd, 3,  1, (TIMERPROC) DrawingUpdate);
 }
