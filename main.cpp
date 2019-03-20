@@ -54,7 +54,9 @@ int SizeCells = 6;
 int Color;
 
 bool TurnDrawing;
-bool Cells[67][67];
+
+int Cells[67][67];
+int OldCells[67][67];
 
 Button ColorBtn[10];
 Button ControlBtn[10];
@@ -208,11 +210,27 @@ void UpdateField(int x, int y)
 	////////////////// Drawing of field //////////////////
 }
 
+struct MemoryofCells
+{
+	int x;
+	int y;	
+}MoC[67][67];
+
+void ChekCells()
+{
+	for(int a = 0; a < 67; a++)
+		for(int b = 0; b < 67; b++)
+			if(Cells[a][b] != OldCells[a][b])
+				Square(MoC[a][b].x, MoC[a][b].y, CNfB[Cells[a][b]], 0, 0);
+}
 
 void DrawingBox(int x, int y)
 {
 	PushProcessing();
 	Control();
+	
+	if(Timer_CLK > 10)
+		ChekCells();
 	
 	UpdateField(x, y);
 	
@@ -228,6 +246,11 @@ void DrawingBox(int x, int y)
 			for(int x = Fx; x < (Fx + SizeCells); x++)
 				for(int y = Fy; y < (Fy + SizeCells); y++)
 				{	
+					if(Timer_CLK == 10)
+					{
+						MoC[a][b].x = Fx;
+						MoC[a][b].y = Fy; 
+					}
 					
 					if(Type == 1 || Type == 2)
 					{	
@@ -238,7 +261,7 @@ void DrawingBox(int x, int y)
 							{
 								if(Type == 1)
 								{
-									Cells[a][b] += Color;
+									Cells[a][b] = Color;
 									Square(Fx, Fy, ColorAuto, 0, 0);
 								}
 								
@@ -267,7 +290,7 @@ void DrawingBox(int x, int y)
 							{	
 								if(Type == 1)
 								{
-									Cells[a][b] += Color;	
+									Cells[a][b] = Color;	
 									Square(Fx, Fy, ColorAuto, 0, 0);
 								}
 								
@@ -306,7 +329,8 @@ void DrawingUpdate()
 }
 
 void INIT()
-{	
+{		
+	Cells[1][2] = 2;
 	CreateControlButtons();
 	CreateColorButton();
 	SetTimer(hWnd, 3,  1, (TIMERPROC) DrawingUpdate);
