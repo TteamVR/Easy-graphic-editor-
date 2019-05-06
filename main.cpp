@@ -34,7 +34,7 @@ const int Yellow = RGB(255, 255,  51);
 const int Black  = RGB(  0,   0,   0);
 const int White  = RGB(255, 255, 255);
 
-int CNfB[10] = {Black, White, Red, Pink,
+int CNfB[11] = {Black, White, Red, Pink,
 				Orange, Yellow,   Green,
 				Blue, Violet,     Gray};
 
@@ -101,13 +101,30 @@ void Square(int x, int y, int Color, int sizeX, int sizeY)
 	ReleaseDC(hWnd,hdc);
 }
 	
+struct MemoryofCells
+{
+	int x;
+	int y;	
+}MoC[67][67];
+
+void ChekCells()
+{	
+	for(int a = 0; a < 67; a++) 
+		for(int b = 0; b < 67; b++)
+			if(Cells[a][b] != OldCells[a][b])
+			{	
+				Square(MoC[a][b].x, MoC[a][b].y, CNfB[Cells[a][b]] , 0, 0);
+				OldCells[a][b] = Cells[a][b];
+			}
+}
+
 void Reset()
 {	
 	for(int a = 0; a < 20; a++)
 		for(int b = 0; b < 20; b++)	
 			Cells[a][b] = 0;
 			
-	Square(FieldX, FieldY, Black, 450, 450);			
+	Square(FieldX, FieldY, Black, 450, 450);
 }
 
 void DrawingMesh(int x, int y)
@@ -198,30 +215,14 @@ void UpdateField(int x, int y)
  
 	if(Forms % 2 != 0)
 	{
-		Boundaries(FieldX, FieldY);	
 		DrawingMesh(x, y);
 	}
 	if(Forms % 2 == 0 && Forms != OldForms)
 	{	
 		Square(FieldX, FieldY, Black, 450, 450);
-		Boundaries(FieldX, FieldY);	
 		OldForms = Forms;
 	}
 	////////////////// Drawing of field //////////////////
-}
-
-struct MemoryofCells
-{
-	int x;
-	int y;	
-}MoC[67][67];
-
-void ChekCells()
-{
-	for(int a = 0; a < 67; a++)
-		for(int b = 0; b < 67; b++)
-			if(Cells[a][b] != OldCells[a][b])
-				Square(MoC[a][b].x, MoC[a][b].y, CNfB[Cells[a][b]], 0, 0);
 }
 
 void DrawingBox(int x, int y)
@@ -229,7 +230,7 @@ void DrawingBox(int x, int y)
 	PushProcessing();
 	Control();
 	
-	if(Timer_CLK > 10)
+	if(Timer_CLK > 1)
 		ChekCells();
 	
 	UpdateField(x, y);
@@ -246,7 +247,7 @@ void DrawingBox(int x, int y)
 			for(int x = Fx; x < (Fx + SizeCells); x++)
 				for(int y = Fy; y < (Fy + SizeCells); y++)
 				{	
-					if(Timer_CLK == 10)
+					if(Timer_CLK < 3)
 					{
 						MoC[a][b].x = Fx;
 						MoC[a][b].y = Fy; 
@@ -329,8 +330,7 @@ void DrawingUpdate()
 }
 
 void INIT()
-{		
-	Cells[1][2] = 2;
+{			
 	CreateControlButtons();
 	CreateColorButton();
 	SetTimer(hWnd, 3,  1, (TIMERPROC) DrawingUpdate);
@@ -374,7 +374,9 @@ void START()
 /////////////////////////////////////////////////     void mainPAINT()    /////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void mainPAINT()
-{
+{	
+	
+	Boundaries(FieldX, FieldY);	
 	DrawingBox(FieldX, FieldY);
 }
 
